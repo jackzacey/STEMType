@@ -1,77 +1,126 @@
 'use client';
+
 import { useState, useEffect, useRef } from 'react';
 import confetti from 'canvas-confetti';
 
 export default function TypingEngine({ terms }: { terms: { term: string; def: string }[] }) {
   const [index, setIndex] = useState(0);
   const [input, setInput] = useState('');
-  const [wpm, setWpm] = useState(0);
-  const [accuracy, setAccuracy] = useState(100);
-  const [streak, setStreak] = useState(0);
   const [startTime, setStartTime] = useState<number | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  const current = terms[index];
+  const currentDef = terms[index]?.def || '';
 
-  useEffect(() => { inputRef.current?.focus(); }, [index]);
+  // Split definition into words for MonkeyType-style rendering
+  const words = currentDef.split(' ');
+  const typedWords = input.trim().split(' ');
+  const currentWordIndex = typedWords.length - 1;
+  const currentTypedWord = typedWords[currentWordIndex] || '';
 
   useEffect(() => {
-    if (!startTime && input.length > 0) setStartTime(Date.now());
-    if (!startTime) return;
-    const timeMin = (Date.now() - startTime) / 60000;
-    const words = input.trim().split(' ').length;
-    setWpm(Math.round(words / timeMin) || 0);
+    inputRef.current?.focus();
+    if (input.length === 1 && !startTime) setStartTime(Date.now());
   }, [input, startTime]);
 
-  const handleSubmit = () => {
-    const correct = input.trim().toLowerCase() === current.def.toLowerCase();
-    if (correct) {
-      setStreak(s => s + 1);
-      confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, colors: ['#64d2ff', '#facc15'] });
-      setIndex(i => i + 1);
-      setInput('');
-    } else {
-      setStreak(0);
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      submitAnswer();
     }
-    setAccuracy(prev => Math.round(((prev * index) + (correct ? 100 : 0)) / (index + 1)));
   };
 
-  const progress = ((index) / terms.length) * 100;
+  const submitAnswer = () => {
+    const correct = input.trim().toLowerCase() === currentDef.toLowerCase();
+    if (correct) {
+      confetti({
+        particleCount: 120,
+        spread: 80,
+        origin: { y: 0.6 },
+        colors: ['#64d2ff', '#facc15', '#3b82f6'],
+      });
+      setIndex(i => i + 1);
+      setInput('');
+    }
+  };
 
   return (
-    <div className="w-full max-w-4xl">
-      <div className="text-center mb-8">
-        <h2 className="text-4xl font-bold text-blue mb-4">{current.term}</h2>
-        <div className="w-full h-4 bg-card rounded-full overflow-hidden">
-          <div className="h-full bg-gradient-to-r from-blue to-gold transition-all" style={{ width: `${progress}%` }} />
-        </div>
-        <div className="mt-6 flex justify-center gap-10 text-xl">
-          <span>WPM: <span className="text-gold font-bold">{wpm}</span></span>
-          <span>Accuracy: <span className="text-gold font-bold">{accuracy}%</span></span>
-          <span>Streak: <span className="text-gold font-bold">{streak}</span></span>
-        </div>
+    <div className="w-full max-w-4xl mx-auto">
+      {/* Term */}
+      <h2 className="text-center text-5xl font-black text-blue-400 mb-12 tracking-tight">
+        {terms[index]?.term}
+      </h2>
+
+      {/* MonkeyType-style text display */}
+      <div className="text-2xl leading-relaxed tracking-wide font-mono mb-8 p-8 bg-[#111]/50 rounded-2xl border border-gray-800">
+        {words.map((word, wordIdx) => {
+          const typed = wordIdx < typedWords.length ? typedWords[wordIdx] : '';
+          const isCurrentWord = wordIdx === currentWordIndex;
+          const isCorrect = typed === word;
+          const isWrong = typed !== '' && typed !== word;
+
+          return (
+            <span key={wordIdx} className="relative">
+              {wordIdx > 0 && ' '}
+              <span
+                className={`
+                  transition-colors duration-100
+                  ${wordIdx < typedWords.length - 1 
+                    ? isCorrect ? 'text-white' : 'text-red-500' 
+                    : wordIdx === currentWordIndex 
+                      ? isCurrentWord && currentTypedWord.length > 0
+                        ? isWrong ? 'text-red-500 bg-red-500/20' : 'text-white bg-blue-500/20'
+                        : 'text-gray-600'
+                      : 'text-gray-600'
+                  }
+                  ${isCurrentWord ? 'underline decoration-4 decoration-blue-500' : ''}
+                `}
+              >
+                {wordIdx === currentWordIndex ? (
+                  <>
+                    {word.split('').map((char, charIdx) => (
+                      <span
+                        key={charIdx}
+                        className={`
+                          ${charIdx < currentTypedWord.length
+                            ? currentTypedWord[charIdx] === char
+                              ? 'text-white'
+                              : 'text-red-500 bg-red-500/30'
+                            : 'text-gray-500'
+                          }
+                        `}
+                      >
+                        {char}
+                      </span>
+                    ))}
+                    {currentTypedWord.length > word.length && (
+                      <span className="text-red-500 bg-red-500/30">
+                        {currentTypedWord.slice(word.length)}
+                      </span>
+                    )}
+                  </>
+                ) : (
+                  word
+                )}
+              </span>
+            </span>
+          );
+        })}
       </div>
 
+      {/* Hidden textarea for input */}
       <textarea
         ref={inputRef}
         value={input}
-        onChange={e => setInput(e.target.value)}
-        onKeyDown={e => e.key === 'Enter' && e.ctrlKey && handleSubmit()}
-        placeholder="Type the definition exactly… (Ctrl+Enter to submit)"
-        className="w-full h-48 p-6 bg-card rounded-2xl text-text text-lg resize-none focus:outline-none focus:ring-4 focus:ring-blue/50"
+        onChange={(e) => setInput(e.target.value)}
+        onKeyDown={handleKeyDown}
+        className="fixed opacity-0 pointer-events-none"
+        autoFocus
       />
 
-      <div className="text-center mt-8">
-        <button onClick={handleSubmit} className="rounded-2xl bg-blue px-16 py-5 text-bg-navy text-2xl font-bold hover:scale-110 transition-all shadow-2xl">
-          Submit Answer
-        </button>
-      </div>
-
-      {index === terms.length && (
-        <div className="text-center mt-16 text-6xl font-bold text-gold animate-bounce">
-          Unit Complete! 🎉
-        </div>
-      )}
+      {/* Instructions */}
+      <p className="text-center text-gray-400 text-lg">
+        Start typing • Press <kbd className="px-2 py-1 bg-gray-800 rounded">Enter</kbd> to submit
+      </p>
     </div>
   );
 }
