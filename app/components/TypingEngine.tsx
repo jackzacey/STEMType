@@ -25,14 +25,14 @@ export default function TypingEngine({ terms }: { terms: { term: string; def: st
   }, [index]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
+    if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       if (input.trim().toLowerCase() === current.def.toLowerCase()) {
         confetti({
-          particleCount: 200,
-          spread: 90,
+          particleCount: 250,
+          spread: 100,
           origin: { y: 0.6 },
-          colors: ['#60a5fa', '#34d399', '#fbbf24', '#c084fc'],
+          colors: ['#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ef4444'],
         });
         setIndex(i => i + 1);
         setInput('');
@@ -42,26 +42,36 @@ export default function TypingEngine({ terms }: { terms: { term: string; def: st
 
   return (
     <>
-      {/* Invisible full-power input */}
+      {/* Invisible input */}
       <input
         ref={inputRef}
         type="text"
         value={input}
         onChange={(e) => setInput(e.target.value)}
         onKeyDown={handleKeyDown}
-        className="fixed inset-0 opacity-0"
+        className="fixed inset-0 opacity-0 caret-transparent"
         autoFocus
       />
 
-      <div className="min-h-screen flex flex-col justify-center items-center px-8 bg-black text-white">
+      {/* MONKEYTYPE.EXACT BACKGROUND */}
+      <div className="min-h-screen flex flex-col justify-center items-center px-8 bg-[#1a1a1a] text-white">
+
         {/* Term */}
-        <h1 className="text-6xl md:text-8xl font-black text-cyan-400 mb-20 tracking-tight">
+        <h1 className="text-5xl md:text-7xl font-black text-cyan-400 mb-16 tracking-tight opacity-90">
           {current.term}
         </h1>
 
-        {/* EXACT MONKEYTYPE TEXT DISPLAY — HUGE, CENTERED, ARIAL */}
+        {/* MONKEYTYPE TEXT — PIXEL PERFECT */}
         <div className="max-w-6xl w-full">
-          <div className="text-6xl md:text-7xl lg:text-8xl leading-tight text-center font-sans select-none" style={{ fontFamily: 'Arial, sans-serif' }}>
+          <div 
+            className="text-6xl md:text-7xl lg:text-8xl leading-tight text-center select-none"
+            style={{
+              fontFamily: '"Roboto Mono", "Courier New", monospace',
+              fontWeight: 400,
+              letterSpacing: '0.02em',
+              lineHeight: '1.4',
+            }}
+          >
             {words.map((word, i) => {
               const typed = typedWords[i] || '';
               const isCurrent = i === typedWords.length - 1;
@@ -69,7 +79,7 @@ export default function TypingEngine({ terms }: { terms: { term: string; def: st
               const isWrong = typed && typed !== word;
 
               return (
-                <span key={i} className="inline-block mx-2">
+                <span key={i} className="inline-block mx-1.5">
                   {word.split('').map((char, j) => {
                     const typedChar = typed[j] || '';
                     const correct = typedChar === char;
@@ -79,19 +89,20 @@ export default function TypingEngine({ terms }: { terms: { term: string; def: st
                       <span
                         key={j}
                         className={`
+                          transition-all duration-75
                           ${i < typedWords.length - 1
-                            ? isCorrect ? 'text-white' : 'text-red-500'
+                            ? isCorrect ? 'text-white' : 'text-red-400'
                             : isCurrent
                               ? extra
-                                ? 'text-red-500 bg-red-500/30'
+                                ? 'text-red-400 bg-red-400/20'
                                 : correct
                                   ? 'text-white'
                                   : typedChar
-                                    ? 'text-red-500 bg-red-500/30'
-                                    : 'text-gray-500'
-                              : 'text-gray-500'
+                                    ? 'text-red-400 bg-red-400/20'
+                                    : 'text-gray-600'
+                              : 'text-gray-600'
                           }
-                          ${isCurrent ? 'underline decoration-cyan-500 decoration-4 underline-offset-8' : ''}
+                          ${isCurrent ? 'underline decoration-4 decoration-cyan-400 underline-offset-8' : ''}
                         `}
                       >
                         {extra ? typedChar : char}
@@ -99,7 +110,7 @@ export default function TypingEngine({ terms }: { terms: { term: string; def: st
                     );
                   })}
                   {isCurrent && typed.length > word.length && (
-                    <span className="text-red-500 bg-red-500/30">
+                    <span className="text-red-400 bg-red-400/20">
                       {typed.slice(word.length)}
                     </span>
                   )}
@@ -109,10 +120,15 @@ export default function TypingEngine({ terms }: { terms: { term: string; def: st
           </div>
         </div>
 
-        {/* Bottom status */}
-        <div className="fixed bottom-10 text-gray-400 text-2xl flex gap-10">
+        {/* Custom blinking caret */}
+        <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+          <div className="w-1 h-20 bg-cyan-400 animate-pulse opacity-80" />
+        </div>
+
+        {/* Bottom bar */}
+        <div className="fixed bottom-10 text-gray-500 text-xl flex gap-12">
           <span>{index + 1} / {terms.length}</span>
-          <span className="text-cyan-400">Press Enter to submit</span>
+          <span className="text-cyan-400">Enter ↵ to submit</span>
         </div>
       </div>
     </>
