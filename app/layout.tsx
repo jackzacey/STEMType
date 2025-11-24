@@ -1,14 +1,22 @@
+import type { Metadata } from 'next'
 import './globals.css'
 
-export const metadata = {
+export const metadata: Metadata = {
   title: 'STEMType',
- description: 'Master Biology & Chemistry by typing',
+  description: 'Master Biology & Chemistry by typing',
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
   return (
-    <html lang="en">
-      <body className="bg-bg text-text min-h-screen antialiased">
+    <html lang="en" className="bg-black">
+      <body
+        className="min-h-screen bg-black text-slate-100"
+        style={{ backgroundColor: '#000000', color: '#e2e8f0' }}
+      >
         {children}
       </body>
     </html>
