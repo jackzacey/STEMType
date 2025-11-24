@@ -1,18 +1,19 @@
+/** @type {import('tailwindcss').Config} */
 module.exports = {
   content: ["./app/**/*.{js,ts,jsx,tsx}"],
   theme: {
     extend: {
       colors: {
-        'bg-navy': '#0f172a',  // calm navy void (instead of pure black)
-        'blue-primary': '#64d2ff',  // icy sky blue for Bio/science
-        'gold-accent': '#facc15',   // soft golden for highlights
-        'text-light': '#e2e8f0',    // soft white for readability
-        'card': '#1e293b',          // subtle panels
+        bg: "#0f172a",
+        card: "#1e293b",
+        blue: "#64d2ff",
+        gold: "#facc15",
+        text: "#e2e8f0",
       },
       animation: {
-        'pulse-glow': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-      }
-    }
+        "pulse-slow": "pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+      },
+    },
   },
-  plugins: []
-}
+  plugins: [],
+};
