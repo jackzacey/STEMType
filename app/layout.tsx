@@ -3,13 +3,17 @@ import './globals.css'
 
 export const metadata: Metadata = {
   title: 'STEMType',
-  description: 'Master Biology & Chemistry by typing definitions',
+  description: 'Master Biology & Chemistry by typing',
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
   return (
     <html lang="en">
-      <body className="bg-[#0f172a] text-[#e2e8f0] min-h-screen antialiased">
+      <body style={{ backgroundColor: '#0f172a', color: '#e2e8f0' }} className="min-h-screen antialiased">
         {children}
       </body>
     </html>
