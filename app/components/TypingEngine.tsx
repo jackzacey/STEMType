@@ -9,7 +9,7 @@ export default function TypingEngine({ terms }: { terms: { term: string; def: st
   const [accuracy, setAccuracy] = useState(100);
   const [streak, setStreak] = useState(0);
   const [startTime, setStartTime] = useState<number | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const current = terms[index];
 
