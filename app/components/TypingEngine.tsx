@@ -8,31 +8,22 @@ export default function TypingEngine({ terms }: { terms: { term: string; def: st
   const [input, setInput] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const current = terms[index];
-  if (!current) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-9xl font-bold text-green-400">
-        Unit Complete! 🎉
-      </div>
-    );
-  }
-
-  const words = current.def.split(' ');
-  const typedWords = input.split(' ');
+  const currentDef = terms[index]?.def || '';
+  const currentTerm = terms[index]?.term || '';
 
   useEffect(() => {
     inputRef.current?.focus();
   }, [index]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === 'Enter') {
       e.preventDefault();
-      if (input.trim().toLowerCase() === current.def.toLowerCase()) {
+      if (input.toLowerCase() === currentDef.toLowerCase()) {
         confetti({
-          particleCount: 250,
-          spread: 100,
-          origin: { y: 0.6 },
-          colors: ['#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ef4444'],
+          particleCount: 300,
+          spread: 120,
+          origin: { y: 0.55 },
+          colors: ['#60a5fa', '#34d399', '#fbbf24', '#c084fc', '#f87171'],
         });
         setIndex(i => i + 1);
         setInput('');
@@ -42,7 +33,7 @@ export default function TypingEngine({ terms }: { terms: { term: string; def: st
 
   return (
     <>
-      {/* Invisible input */}
+      {/* Hidden real input — this is how MonkeyType does it */}
       <input
         ref={inputRef}
         type="text"
@@ -53,82 +44,72 @@ export default function TypingEngine({ terms }: { terms: { term: string; def: st
         autoFocus
       />
 
-      {/* MONKEYTYPE.EXACT BACKGROUND */}
-      <div className="min-h-screen flex flex-col justify-center items-center px-8 bg-[#1a1a1a] text-white">
-
+      <div className="min-h-screen flex flex-col justify-center items-center bg-[#1e1e1e] text-white px-8">
         {/* Term */}
-        <h1 className="text-5xl md:text-7xl font-black text-cyan-400 mb-16 tracking-tight opacity-90">
-          {current.term}
+        <h1 className="text-6xl md:text-8xl font-black text-cyan-400 mb-20 tracking-tight">
+          {currentTerm}
         </h1>
 
-        {/* MONKEYTYPE TEXT — PIXEL PERFECT */}
-        <div className="max-w-6xl w-full">
-          <div 
-            className="text-6xl md:text-7xl lg:text-8xl leading-tight text-center select-none"
+        {/* PERFECT CHARACTER-BY-CHARACTER RENDERING */}
+        <div className="max-w-5xl w-full">
+          <div
+            className="text-6xl md:text-7xl lg:text-8xl leading-snug text-center font-mono select-none"
             style={{
-              fontFamily: '"Roboto Mono", "Courier New", monospace',
-              fontWeight: 400,
-              letterSpacing: '0.02em',
+              fontFamily: '"Roboto Mono", Menlo, monospace',
+              letterSpacing: '0.05em',
               lineHeight: '1.4',
             }}
           >
-            {words.map((word, i) => {
-              const typed = typedWords[i] || '';
-              const isCurrent = i === typedWords.length - 1;
-              const isCorrect = typed === word && typed !== '';
-              const isWrong = typed && typed !== word;
+            {currentDef.split('').map((char, i) => {
+              const typedChar = input[i];
+              const isCorrect = typedChar === char;
+              const isCurrent = i === input.length;
+              const isExtra = i >= currentDef.length;
+
+              if (isExtra) {
+                return (
+                  <span key={i} className="text-red-500 bg-red-500/30">
+                    {typedChar}
+                  </span>
+                );
+              }
 
               return (
-                <span key={i} className="inline-block mx-1.5">
-                  {word.split('').map((char, j) => {
-                    const typedChar = typed[j] || '';
-                    const correct = typedChar === char;
-                    const extra = j >= word.length;
-
-                    return (
-                      <span
-                        key={j}
-                        className={`
-                          transition-all duration-75
-                          ${i < typedWords.length - 1
-                            ? isCorrect ? 'text-white' : 'text-red-400'
-                            : isCurrent
-                              ? extra
-                                ? 'text-red-400 bg-red-400/20'
-                                : correct
-                                  ? 'text-white'
-                                  : typedChar
-                                    ? 'text-red-400 bg-red-400/20'
-                                    : 'text-gray-600'
-                              : 'text-gray-600'
-                          }
-                          ${isCurrent ? 'underline decoration-4 decoration-cyan-400 underline-offset-8' : ''}
-                        `}
-                      >
-                        {extra ? typedChar : char}
-                      </span>
-                    );
-                  })}
-                  {isCurrent && typed.length > word.length && (
-                    <span className="text-red-400 bg-red-400/20">
-                      {typed.slice(word.length)}
-                    </span>
+                <span
+                  key={i}
+                  className={`
+                    relative transition-all duration-75
+                    ${i < input.length
+                      ? isCorrect
+                        ? 'text-white'
+                        : 'text-red-500'
+                      : 'text-gray-500'
+                    }
+                  `}
+                >
+                  {char}
+                  {/* Blinking caret */}
+                  {isCurrent && (
+                    <span className="absolute -left-1 w-1 h-full bg-cyan-400 animate-pulse" />
                   )}
                 </span>
               );
             })}
+
+            {/* Extra characters after end */}
+            {input.length > currentDef.length &&
+              input.slice(currentDef.length).split('').map((char, i) => (
+                <span key={`extra-${i}`} className="text-red-500 bg-red-500/30">
+                  {char}
+                </span>
+              ))}
           </div>
         </div>
 
-        {/* Custom blinking caret */}
-        <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
-          <div className="w-1 h-20 bg-cyan-400 animate-pulse opacity-80" />
-        </div>
-
         {/* Bottom bar */}
-        <div className="fixed bottom-10 text-gray-500 text-xl flex gap-12">
+        <div className="fixed bottom-12 text-gray-400 text-2xl flex gap-12">
           <span>{index + 1} / {terms.length}</span>
-          <span className="text-cyan-400">Enter ↵ to submit</span>
+          <span className="text-cyan-400">Enter to submit • Perfect = Confetti</span>
         </div>
       </div>
     </>
