@@ -3,7 +3,7 @@ import './globals.css'
 
 export const metadata: Metadata = {
   title: 'STEMType',
-  description: 'Master Biology & Chemistry by typing definitions',
+  description: 'Master Biology & Chemistry by typing',
 }
 
 export default function RootLayout({
