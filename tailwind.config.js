@@ -1,4 +1,4 @@
-JavaScript/** @type {import('tailwindcss').Config} */
+/** @type {import('tailwindcss').Config */
 module.exports = {
   content: [
     "./app/**/*.{js,ts,jsx,tsx}",
@@ -7,12 +7,15 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        bg: "#0a0a0a",      // Grok's true matte black void
-        card: "#111",       // subtle layer for panels (Grok-style depth)
-        blue: "#64d2ff",    // your icy accent
-        gold: "#facc15",    // your golden highlight
+        bg: "#0a0a0a",        // true matte black (Grok exact)
+        card: "#111111",      // subtle panel depth
+        accent: "#3b82f6",    // calm blue (instead of neon #64d2ff)
+        gold: "#fbbf24",      // softer gold
         muted: "#94a3b8",
-        text: "#e2e8f0"     // soft white for readability
+        text: "#f1f5f9"       // cleaner white
+      },
+      backgroundImage: {
+        'subtle-grain': "url('data:image/svg+xml,%3Csvg xmlns=\"http://www.w3.org/2000/svg\" width=\"4\" height=\"4\" viewBox=\"0 0 4 4\"%3E%3Cpath fill=\"%23ffffff\" fill-opacity=\"0.02\" d=\"M1 3h1v1H1V3zm2-2h1v1H3V1z\"%3E%3C/path%3E%3C/svg%3E')",
       }
     }
   },
