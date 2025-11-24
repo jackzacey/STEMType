@@ -1,5 +1,5 @@
-import TypingEngine from '@/components/TypingEngine';
-import { characteristicsTerms } from '@/data/terms/characteristics';
+import TypingEngine from '../../../components/TypingEngine'
+import { characteristicsTerms } from '../../../data/terms/characteristics'
 
 export default function Characteristics() {
   return (
