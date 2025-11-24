@@ -8,108 +8,101 @@ export default function TypingEngine({ terms }: { terms: { term: string; def: st
   const [input, setInput] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const currentDef = terms[index]?.def || '';
-  const currentTerm = terms[index]?.term || '';
+  const current = terms[index];
+  if (!current) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#1e1e1e] text-9xl font-bold text-green-400">
+        UNIT COMPLETE! 🎉
+      </div>
+    );
+  }
 
   useEffect(() => {
     inputRef.current?.focus();
   }, [index]);
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      if (input.toLowerCase() === currentDef.toLowerCase()) {
-        confetti({
-          particleCount: 300,
-          spread: 120,
-          origin: { y: 0.55 },
-          colors: ['#60a5fa', '#34d399', '#fbbf24', '#c084fc', '#f87171'],
-        });
-        setIndex(i => i + 1);
-        setInput('');
-      }
+  const handleSubmit = () => {
+    if (input.toLowerCase() === current.def.toLowerCase()) {
+      confetti({
+        particleCount: 300,
+        spread: 110,
+        origin: { y: 0.55 },
+        colors: ['#06b6d4', '#10b981', '#f59e0b', '#a78bfa', '#ef4444'],
+      });
+      setIndex(i => i + 1);
+      setInput('');
     }
   };
 
   return (
     <>
-      {/* Hidden real input — this is how MonkeyType does it */}
+      {/* Invisible real input — this is the real MonkeyType trick */}
       <input
         ref={inputRef}
         type="text"
         value={input}
         onChange={(e) => setInput(e.target.value)}
-        onKeyDown={handleKeyDown}
-        className="fixed inset-0 opacity-0 caret-transparent"
+        onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
+        className="fixed inset-0 opacity-0 outline-none"
         autoFocus
       />
 
-      <div className="min-h-screen flex flex-col justify-center items-center bg-[#1e1e1e] text-white px-8">
+      <div className="flex min-h-screen flex-col items-center justify-center bg-[#1e1e1e] px-8 font-mono">
         {/* Term */}
-        <h1 className="text-6xl md:text-8xl font-black text-cyan-400 mb-20 tracking-tight">
-          {currentTerm}
+        <h1 className="mb-20 text-6xl font-black text-cyan-400 md:text-8xl">
+          {current.term}
         </h1>
 
-        {/* PERFECT CHARACTER-BY-CHARACTER RENDERING */}
-        <div className="max-w-5xl w-full">
+        {/* THE ACTUAL MONKEYTYPE TEXT RENDERING */}
+        <div className="relative max-w-6xl">
           <div
-            className="text-6xl md:text-7xl lg:text-8xl leading-snug text-center font-mono select-none"
+            className="text-center text-6xl leading-snug tracking-wider md:text-7xl lg:text-8xl"
             style={{
-              fontFamily: '"Roboto Mono", Menlo, monospace',
-              letterSpacing: '0.05em',
+              fontFamily: '"Roboto Mono", ui-monospace, monospace',
+              letterSpacing: '0.04em',
               lineHeight: '1.4',
             }}
           >
-            {currentDef.split('').map((char, i) => {
-              const typedChar = input[i];
-              const isCorrect = typedChar === char;
+            {current.def.split('').map((char, i) => {
+              const typed = input[i];
+              const isCorrect = typed === char;
+              const isWrong = typed !== undefined && typed !== char;
               const isCurrent = i === input.length;
-              const isExtra = i >= currentDef.length;
-
-              if (isExtra) {
-                return (
-                  <span key={i} className="text-red-500 bg-red-500/30">
-                    {typedChar}
-                  </span>
-                );
-              }
 
               return (
                 <span
                   key={i}
-                  className={`
-                    relative transition-all duration-75
-                    ${i < input.length
+                  className={`relative inline-block transition-all duration-75 ${
+                    i < input.length
                       ? isCorrect
                         ? 'text-white'
                         : 'text-red-500'
                       : 'text-gray-500'
-                    }
-                  `}
+                  }`}
                 >
-                  {char}
-                  {/* Blinking caret */}
+                  {char === ' ' ? '\u00A0' : char}
+
+                  {/* BLINKING CYAN CARET */}
                   {isCurrent && (
-                    <span className="absolute -left-1 w-1 h-full bg-cyan-400 animate-pulse" />
+                    <span className="absolute -left-0.5 top-0 h-full w-1 bg-cyan-400 animate-pulse" />
                   )}
                 </span>
               );
             })}
 
-            {/* Extra characters after end */}
-            {input.length > currentDef.length &&
-              input.slice(currentDef.length).split('').map((char, i) => (
-                <span key={`extra-${i}`} className="text-red-500 bg-red-500/30">
-                  {char}
-                </span>
-              ))}
+            {/* EXTRA CHARACTERS (typed past the end) */}
+            {input.slice(current.def.length).split('').map((char, i) => (
+              <span key={`extra-${i}`} className="text-red-500 bg-red-500/30">
+                {char}
+              </span>
+            ))}
           </div>
         </div>
 
         {/* Bottom bar */}
-        <div className="fixed bottom-12 text-gray-400 text-2xl flex gap-12">
+        <div className="fixed bottom-12 flex gap-12 text-xl text-gray-400">
           <span>{index + 1} / {terms.length}</span>
-          <span className="text-cyan-400">Enter to submit • Perfect = Confetti</span>
+          <span className="text-cyan-400">Press Enter to submit</span>
         </div>
       </div>
     </>
