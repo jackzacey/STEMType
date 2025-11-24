@@ -1,11 +1,15 @@
-// app/layout.tsx
-import './globals.css';
+import type { Metadata } from 'next'
+import './globals.css'
 
-export const metadata = {
+export const metadata: Metadata = {
   title: 'STEMType',
-  description: 'Biology and Chemistry learning app',
-};
+  description: 'Master Biology & Chemistry by typing',
+}
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  return <html lang="en"><body>{children}</body></html>;
+  return (
+    <html lang="en">
+      <body className="bg-bg text-text min-h-screen">{children}</body>
+    </html>
+  )
 }
