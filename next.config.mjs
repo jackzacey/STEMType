@@ -1,7 +1,11 @@
+// next.config.mjs
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   webpack(config) {
-    config.resolve.alias['@'] = '.';
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@': __dirname,   // ← this is the correct way
+    };
     return config;
   },
 };
