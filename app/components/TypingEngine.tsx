@@ -11,18 +11,15 @@ export default function TypingEngine({ terms }: { terms: { term: string; def: st
   const current = terms[index];
   if (!current) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-8xl font-bold text-green-400">
-        You Mastered This Unit! 🎉
+      <div className="min-h-screen flex items-center justify-center text-9xl font-bold text-green-400">
+        Unit Complete! 🎉
       </div>
     );
   }
 
   const words = current.def.split(' ');
-  const userWords = input.split(' ');
-  const currentWordIndex = userWords.length - 1;
-  const currentUserWord = userWords[currentWordIndex] || '';
+  const typedWords = input.split(' ');
 
-  // Auto-focus on mount + every new term
   useEffect(() => {
     inputRef.current?.focus();
   }, [index]);
@@ -33,11 +30,11 @@ export default function TypingEngine({ terms }: { terms: { term: string; def: st
       if (input.trim().toLowerCase() === current.def.toLowerCase()) {
         confetti({
           particleCount: 200,
-          spread: 100,
+          spread: 90,
           origin: { y: 0.6 },
-          colors: ['#60a5fa', '#34d399', '#fbbf24', '#c084fc', '#f87171'],
+          colors: ['#60a5fa', '#34d399', '#fbbf24', '#c084fc'],
         });
-        setIndex(prev => prev + 1);
+        setIndex(i => i + 1);
         setInput('');
       }
     }
@@ -45,70 +42,65 @@ export default function TypingEngine({ terms }: { terms: { term: string; def: st
 
   return (
     <>
-      {/* Invisible input — full power of real typing */}
+      {/* Invisible full-power input */}
       <input
         ref={inputRef}
         type="text"
         value={input}
         onChange={(e) => setInput(e.target.value)}
         onKeyDown={handleKeyDown}
-        className="fixed inset-0 opacity-0 pointer-events-none"
+        className="fixed inset-0 opacity-0"
         autoFocus
       />
 
-      <div className="min-h-screen flex flex-col items-center justify-center px-12 py-20 bg-black text-white">
-        {/* Term Title */}
-        <h1 className="text-5xl md:text-7xl font-black text-cyan-400 mb-16 tracking-tight">
+      <div className="min-h-screen flex flex-col justify-center items-center px-8 bg-black text-white">
+        {/* Term */}
+        <h1 className="text-6xl md:text-8xl font-black text-cyan-400 mb-20 tracking-tight">
           {current.term}
         </h1>
 
-        {/* Massive Full-Width Text Display — Real MonkeyType Style */}
-        <div className="w-full max-w-7xl">
-          <div className="text-5xl md:text-6xl lg:text-7xl leading-tight md:leading-tight lg:leading-tight tracking-wide font-mono select-none">
-            {words.map((word, wordIdx) => {
-              const typedWord = userWords[wordIdx] || '';
-              const isCurrentWord = wordIdx === currentWordIndex;
-              const isCorrectWord = typedWord === word;
-              const isWrongWord = typedWord && typedWord !== word;
+        {/* EXACT MONKEYTYPE TEXT DISPLAY — HUGE, CENTERED, ARIAL */}
+        <div className="max-w-6xl w-full">
+          <div className="text-6xl md:text-7xl lg:text-8xl leading-tight text-center font-sans select-none" style={{ fontFamily: 'Arial, sans-serif' }}>
+            {words.map((word, i) => {
+              const typed = typedWords[i] || '';
+              const isCurrent = i === typedWords.length - 1;
+              const isCorrect = typed === word && typed !== '';
+              const isWrong = typed && typed !== word;
 
               return (
-                <span key={wordIdx} className="inline-block mr-4">
-                  {word.split('').map((char, charIdx) => {
-                    const typedChar = typedWord[charIdx] || '';
-                    const isCorrectChar = typedChar === char;
-                    const isExtraChar = charIdx >= word.length;
+                <span key={i} className="inline-block mx-2">
+                  {word.split('').map((char, j) => {
+                    const typedChar = typed[j] || '';
+                    const correct = typedChar === char;
+                    const extra = j >= word.length;
 
                     return (
                       <span
-                        key={charIdx}
+                        key={j}
                         className={`
-                          relative transition-all duration-75
-                          ${wordIdx < currentWordIndex
-                            ? isCorrectWord
-                              ? 'text-white'
-                              : 'text-red-500'
-                            : isCurrentWord
-                              ? isExtraChar
-                                ? 'text-red-500 bg-red-500/40 rounded'
-                                : isCorrectChar
+                          ${i < typedWords.length - 1
+                            ? isCorrect ? 'text-white' : 'text-red-500'
+                            : isCurrent
+                              ? extra
+                                ? 'text-red-500 bg-red-500/30'
+                                : correct
                                   ? 'text-white'
                                   : typedChar
-                                    ? 'text-red-500 bg-red-500/40 rounded'
+                                    ? 'text-red-500 bg-red-500/30'
                                     : 'text-gray-500'
                               : 'text-gray-500'
                           }
-                          ${isCurrentWord ? 'underline decoration-4 decoration-cyan-500 underline-offset-8' : ''}
+                          ${isCurrent ? 'underline decoration-cyan-500 decoration-4 underline-offset-8' : ''}
                         `}
                       >
-                        {isExtraChar ? typedChar : char}
+                        {extra ? typedChar : char}
                       </span>
                     );
                   })}
-
-                  {/* Extra characters beyond word length */}
-                  {isCurrentWord && typedWord.length > word.length && (
-                    <span className="text-red-500 bg-red-500/40 rounded">
-                      {typedWord.slice(word.length)}
+                  {isCurrent && typed.length > word.length && (
+                    <span className="text-red-500 bg-red-500/30">
+                      {typed.slice(word.length)}
                     </span>
                   )}
                 </span>
@@ -117,11 +109,10 @@ export default function TypingEngine({ terms }: { terms: { term: string; def: st
           </div>
         </div>
 
-        {/* Bottom bar */}
-        <div className="fixed bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-12 text-gray-400 text-xl">
+        {/* Bottom status */}
+        <div className="fixed bottom-10 text-gray-400 text-2xl flex gap-10">
           <span>{index + 1} / {terms.length}</span>
           <span className="text-cyan-400">Press Enter to submit</span>
-          <span>Perfect = Confetti</span>
         </div>
       </div>
     </>
