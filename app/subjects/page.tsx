@@ -1,17 +1,17 @@
-import Link from 'next/link';
+import Link from 'next/link'
 
 export default function Subjects() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-16 bg-bg px-8 text-text">
-      <h1 className="text-7xl font-bold text-blue animate-pulse-slow drop-shadow-2xl">Choose Your Subject</h1>
-      <div className="flex gap-16">
-        <Link href="/subjects/bio" className="rounded-2xl bg-blue px-24 py-12 text-bg text-5xl font-bold hover:scale-110 transition-all shadow-2xl">
+    <main className="min-h-screen flex flex-col items-center justify-center gap-20 px-8 bg-[#0a0a0a]">
+      <h1 className="text-7xl font-black text-[#64d2ff]">Choose Your Subject</h1>
+      <div className="flex gap-12">
+        <Link href="/subjects/bio" className="rounded-3xl bg-[#64d2ff] px-20 py-12 text-[#0a0a0a] text-5xl font-bold hover:scale-110 transition-all shadow-2xl">
           Biology
         </Link>
-        <Link href="/subjects/chem" className="rounded-2xl border-4 border-gold px-24 py-12 text-gold text-5xl font-bold hover:bg-gold hover:text-bg transition-all shadow-2xl">
+        <div className="rounded-3xl border-4 border-[#facc15]/50 px-20 py-12 text-[#facc15] text-5xl font-bold opacity-60">
           Chemistry (soon)
-        </Link>
+        </div>
       </div>
     </main>
-  );
+  )
 }
