@@ -1,9 +1,9 @@
 export const characteristicsTerms = [
   { term: "Homeostasis", def: "The maintenance of stable internal conditions despite changes in the external environment" },
-  { term: "Metabolism", def: "All the chemical reactions that occur within an organism" },
+  { term: "Metabolism", def: "All of the chemical reactions that occur within an organism" },
   { term: "Response to stimuli", def: "A change in behavior or physiology due to a change in the environment" },
   { term: "Reproduction", def: "The process by which organisms produce new individuals of the same type" },
-  { term: "Growth and development", def: "An increase in size and change in form through cell division and differentiation" },
+  { term: "Growth and development", def: "Increase in size and changes in form and function over the life of an organism" },
   { term: "Adaptation", def: "An inherited characteristic that increases an organism's chance of survival" },
   { term: "Organization", def: "Living things are highly organized from cells to organ systems" },
   { term: "Energy processing", def: "Organisms use energy to carry out life functions" },
