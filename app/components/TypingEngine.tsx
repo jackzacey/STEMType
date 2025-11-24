@@ -27,7 +27,7 @@ export default function TypingEngine({ terms }: { terms: { term: string; def: st
     const correct = input.trim().toLowerCase() === current.def.toLowerCase();
     if (correct) {
       setStreak(s => s + 1);
-      confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 }, colors: ['#64d2ff', '#facc15'] });
+      confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, colors: ['#64d2ff', '#facc15'] });
       setIndex(i => i + 1);
       setInput('');
     } else {
