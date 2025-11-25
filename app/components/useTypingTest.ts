@@ -1,95 +1,74 @@
 // app/components/useTypingTest.ts
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import confetti from 'canvas-confetti';
-
-type CharState = 'untyped' | 'correct' | 'incorrect';
 
 export function useTypingTest(terms: { term: string; def: string }[]) {
   const [termIndex, setTermIndex] = useState(0);
   const [cursor, setCursor] = useState(0);
-  const [states, setStates] = useState<CharState[]>([]);
+  const [states, setStates] = useState<('untyped' | 'correct' | 'incorrect')[]>([]);
   const [extra, setExtra] = useState('');
 
-  const cursorRef = useRef(0);
-  const statesRef = useRef<CharState[]>([]);
-  const extraRef = useRef('');
-  const charsRef = useRef<string[]>([]);
+  const current = terms[termIndex];
+  const chars = current?.def.split('') || [];
 
-  const currentDef = terms[termIndex]?.def || '';
-  const chars = currentDef.split('');
-
-  // Reset on new term
   useEffect(() => {
-    charsRef.current = chars;
-    cursorRef.current = 0;
-    statesRef.current = chars.map(() => 'untyped');
-    extraRef.current = '';
     setCursor(0);
-    setStates([...statesRef.current]);
+    setStates(chars.map(() => 'untyped'));
     setExtra('');
-  }, [termIndex, currentDef]);
+  }, [termIndex]);
 
-  const focusRef = useRef<HTMLInputElement>(null);
-  const focus = () => focusRef.current?.focus();
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (cursor === chars.length && states.every(s => s === 'correct') && extra === '') {
+        confetti({ particleCount: 800, spread: 180, origin: { y: 0.55 } });
+        setTermIndex(i => i + 1);
+      }
+      return;
+    }
+
+    if (e.key === 'Backspace') {
+      e.preventDefault();
+      if (extra) {
+        setExtra(extra.slice(0, -1));
+      } else if (cursor > 0) {
+        setStates(prev => {
+          const next = [...prev];
+          next[cursor - 1] = 'untyped';
+          return next;
+        });
+        setCursor(c => c - 1);
+      }
+      return;
+    }
+
+    if (e.key.length === 1) {
+      e.preventDefault();
+      if (cursor < chars.length) {
+        const correct = e.key === chars[cursor];
+        setStates(prev => {
+          const next = [...prev];
+          next[cursor] = correct ? 'correct' : 'incorrect';
+          return next;
+        });
+        setCursor(c => c + 1);
+      } else {
+        setExtra(prev => prev + e.key);
+      }
+    }
+  };
 
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        const perfect = cursorRef.current === charsRef.current.length &&
-                        statesRef.current.every(s => s === 'correct') &&
-                        extraRef.current === '';
-        if (perfect) {
-          confetti({
-            particleCount: 700,
-            spread: 180,
-            origin: { y: 0.55 },
-            colors: ['#22d3ee', '#a855f7', '#f472b6', '#fbbf24', '#86efac']
-          });
-          setTermIndex(i => i + 1);
-        }
-        return;
-      }
-
-      if (e.key === 'Backspace') {
-        e.preventDefault();
-        if (extraRef.current) {
-          extraRef.current = extraRef.current.slice(0, -1);
-          setExtra(extraRef.current);
-        } else if (cursorRef.current > 0) {
-          cursorRef.current--;
-          statesRef.current[cursorRef.current] = 'untyped';
-          setCursor(cursorRef.current);
-          setStates([...statesRef.current]);
-        }
-        return;
-      }
-
-      if (e.key.length === 1) {
-        e.preventDefault();
-        if (cursorRef.current < charsRef.current.length) {
-          const correct = e.key === charsRef.current[cursorRef.current];
-          statesRef.current[cursorRef.current] = correct ? 'correct' : 'incorrect';
-          cursorRef.current++;
-          setStates([...statesRef.current]);
-          setCursor(cursorRef.current);
-        } else {
-          extraRef.current += e.key;
-          setExtra(extraRef.current);
-        }
-      }
-    };
-
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [termIndex]);
+  }, [cursor, states, extra, termIndex]);
 
   const isPerfect = cursor === chars.length && states.every(s => s === 'correct') && extra === '';
 
   return {
-    term: terms[termIndex],
+    term: current,
     chars,
     states,
     cursor,
@@ -97,8 +76,6 @@ export function useTypingTest(terms: { term: string; def: string }[]) {
     isPerfect,
     termIndex,
     totalTerms: terms.length,
-    focus,
-    focusRef,
-    nextTerm: () => setTermIndex(i => i + 1),
+    handleKeyDown,
   };
 }
