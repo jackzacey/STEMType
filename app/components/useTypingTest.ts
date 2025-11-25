@@ -1,4 +1,7 @@
-import { useEffect, useState } from 'react';
+// app/components/useTypingTest.ts
+'use client';
+
+import { useState, useEffect } from 'react';
 import confetti from 'canvas-confetti';
 
 type CharState = 'untyped' | 'correct' | 'incorrect';
@@ -9,22 +12,27 @@ export function useTypingTest(terms: { term: string; def: string }[]) {
   const [states, setStates] = useState<CharState[]>([]);
   const [extra, setExtra] = useState('');
 
-  const current = terms[termIndex];
+  const currentTerm = terms[termIndex];
+  const chars = currentTerm?.def.split('') || [];
 
-  const chars = current?.def.split('') || [];
-
+  // Reset on new term
   useEffect(() => {
     setCursor(0);
-    setStates(chars.map(() => 'untyped'));
+    setStates(chars.map(() => 'untyped' as const));
     setExtra('');
-  }, [termIndex, current]);
+  }, [termIndex, currentTerm]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Prevent scroll/space issues
+      if ([' ', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+        e.preventDefault();
+      }
+
       if (e.key === 'Enter') {
         e.preventDefault();
         if (cursor === chars.length && states.every(s => s === 'correct') && extra === '') {
-          confetti({ particleCount: 500, spread: 150, origin: { y: 0.6 } });
+          confetti({ particleCount: 800, spread: 180, origin: { y: 0.55 } });
           setTermIndex(i => i + 1);
         }
         return;
@@ -33,7 +41,7 @@ export function useTypingTest(terms: { term: string; def: string }[]) {
       if (e.key === 'Backspace') {
         e.preventDefault();
         if (extra) {
-          setExtra(extra.slice(0, -1));
+          setExtra(prev => prev.slice(0, -1));
         } else if (cursor > 0) {
           setStates(prev => {
             const next = [...prev];
@@ -48,10 +56,10 @@ export function useTypingTest(terms: { term: string; def: string }[]) {
       if (e.key.length === 1) {
         e.preventDefault();
         if (cursor < chars.length) {
-          const correct = e.key === chars[cursor];
+          const isCorrect = e.key === chars[cursor];
           setStates(prev => {
             const next = [...prev];
-            next[cursor] = correct ? 'correct' : 'incorrect';
+            next[cursor] = isCorrect ? 'correct' : 'incorrect';
             return next;
           });
           setCursor(c => c + 1);
@@ -61,38 +69,14 @@ export function useTypingTest(terms: { term: string; def: string }[]) {
       }
     };
 
-    const handleCompositionStart = () => {};
-    const handleCompositionEnd = (e: CompositionEvent) => {
-      const text = e.data || '';
-      for (const ch of text) {
-        if (cursor < chars.length) {
-          const correct = ch === chars[cursor];
-          setStates(prev => {
-            const next = [...prev];
-            next[cursor] = correct ? 'correct' : 'incorrect';
-            return next;
-          });
-          setCursor(c => c + 1);
-        } else {
-          setExtra(prev => prev + ch);
-        }
-      }
-    };
-
     window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('compositionstart', handleCompositionStart);
-    window.addEventListener('compositionend', handleCompositionEnd);
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('compositionstart', handleCompositionStart);
-      window.removeEventListener('compositionend', handleCompositionEnd);
-    };
-  }, [cursor, states, extra, termIndex, chars]);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [cursor, states, extra, chars.length, termIndex]);
 
   const isPerfect = cursor === chars.length && states.every(s => s === 'correct') && extra === '';
 
   return {
-    term: current,
+    currentTerm,
     chars,
     states,
     cursor,
