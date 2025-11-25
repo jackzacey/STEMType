@@ -2,37 +2,28 @@
 'use client';
 
 import { useTypingTest } from './useTypingTest';
-import TypingDisplay from './TypingDisplay';
 import { HiddenInput } from './HiddenInput';
+import TypingDisplay from './TypingDisplay';
+import { useRef } from 'react';
 
 export default function TypingEngine({ terms }: { terms: { term: string; def: string }[] }) {
-  const {
-    term,
-    chars,
-    states,
-    cursor,
-    extra,
-    isPerfect,
-    termIndex,
-    totalTerms,
-    focus,
-    focusRef,
-  } = useTypingTest(terms);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const { term, chars, states, cursor, extra, isPerfect, termIndex, totalTerms } = useTypingTest(terms);
 
- if (!term) {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-black">
-      <div className="text-9xl md:text-[14rem] font-black text-green-400 animate-pulse tracking-tight">
-        UNIT COMPLETE! 🎉
+  if (!term) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-black">
+        <div className="text-9xl md:text-[14rem] font-black text-green-400 animate-pulse">
+          UNIT COMPLETE! 🎉
+        </div>
       </div>
-    </div>
-  );
-}
+    );
+  }
 
   return (
     <>
-      <HiddenInput ref={focusRef} />
-      <div onClick={focus} className="cursor-text">
+      <HiddenInput ref={inputRef} />
+      <div onClick={() => inputRef.current?.focus()} className="min-h-screen bg-black">
         <TypingDisplay
           term={term.term}
           chars={chars}
