@@ -14,8 +14,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      {/* NO BACKGROUND CLASSES AT ALL — THIS IS THE KEY */}
-      <body>{children}</body>
+      <body>{children}</body> {/* no background at all */}
     </html>
   )
 }
