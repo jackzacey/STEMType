@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import confetti from 'canvas-confetti';
 
 type CharState = 'untyped' | 'correct' | 'incorrect';
@@ -9,7 +9,6 @@ export default function TypingEngine({ terms }: { terms: { term: string; def: st
   const [termIndex, setTermIndex] = useState(0);
   const [charIndex, setCharIndex] = useState(0);
   const [states, setStates] = useState<CharState[]>([]);
-  const containerRef = useRef<HTMLDivElement>(null);
 
   const current = terms[termIndex];
   if (!current) {
@@ -22,17 +21,22 @@ export default function TypingEngine({ terms }: { terms: { term: string; def: st
 
   const chars = current.def.split('');
 
-  // Reset when term changes
+  // Reset on new term
   useEffect(() => {
     setCharIndex(0);
     setStates(chars.map(() => 'untyped'));
   }, [termIndex]);
 
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
+    const handleKey = (e: KeyboardEvent) => {
+      // Prevent scrolling, default actions
+      if (['ArrowUp', 'ArrowDown', ' '].includes(e.key)) e.preventDefault();
+
+      // ENTER = submit only if fully correct
       if (e.key === 'Enter') {
         e.preventDefault();
-        if (charIndex === chars.length && states.every(s => s === 'correct')) {
+        const allCorrect = states.every(s => s === 'correct') && charIndex === chars.length;
+        if (allCorrect) {
           confetti({
             particleCount: 350,
             spread: 120,
@@ -44,31 +48,36 @@ export default function TypingEngine({ terms }: { terms: { term: string; def: st
         return;
       }
 
+      // BACKSPACE
       if (e.key === 'Backspace') {
         e.preventDefault();
         if (charIndex > 0) {
-          setCharIndex(i => i - 1);
+          setCharIndex(prev => prev - 1);
           setStates(prev => {
-            const next = [...prev];
-            next[charIndex - 1] = 'untyped';
-            return next;
+            const copy = [...prev];
+            copy[charIndex - 1] = 'untyped';
+            return copy;
           });
         }
         return;
       }
 
+      // Regular character
       if (e.key.length === 1 && charIndex < chars.length) {
         e.preventDefault();
-        const isCorrect = e.key === chars[charIndex];
-        setStates(prev => {
-          const next = [...prev];
-          next[charIndex] = isCorrect ? 'correct' : 'incorrect';
-          return next;
-        });
-        setCharIndex(i => i + 1);
+        const expected = chars[charIndex];
+        const isCorrect = e.key === expected;
 
-        // Auto-submit when finished perfectly
-        if (charIndex + 1 === chars.length && states.slice(0, -1).every(s => s === 'correct') && isCorrect) {
+        setStates(prev => {
+          const copy = [...prev];
+          copy[charIndex] = isCorrect ? 'correct' : 'incorrect';
+          return copy;
+        });
+
+        setCharIndex(prev => prev + 1);
+
+        // Auto-advance if perfect
+        if (charIndex + 1 === chars.length && isCorrect && states.slice(0, -1).every(s => s === 'correct')) {
           setTimeout(() => {
             confetti({
               particleCount: 350,
@@ -76,24 +85,26 @@ export default function TypingEngine({ terms }: { terms: { term: string; def: st
               origin: { y: 0.55 },
             });
             setTermIndex(i => i + 1);
-          }, 300);
+          }, 400);
         }
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [charIndex, states, chars, termIndex]);
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [charIndex, states, chars.length, termIndex]);
+
+  const isFinished = charIndex === chars.length && states.every(s => s === 'correct');
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-[#1e1e1e] px-8 font-mono text-white">
       {/* Term */}
-      <h1 className="mb-24 text-6xl font-black text-cyan-400 md:text-8xl">
+      <h1 className="mb-24 text-6xl font-black text-cyan-400 md:text-8xl tracking-tight">
         {current.term}
       </h1>
 
-      {/* Text + Caret */}
-      <div ref={containerRef} className="relative max-w-6xl">
+      {/* Text */}
+      <div className="relative max-w-6xl">
         <div
           className="text-center text-6xl leading-snug tracking-wider md:text-7xl lg:text-8xl"
           style={{
@@ -110,14 +121,14 @@ export default function TypingEngine({ terms }: { terms: { term: string; def: st
                   ? 'text-white'
                   : states[i] === 'incorrect'
                   ? 'text-red-500'
-                  : 'text-gray-500 opacity-50'
+                  : 'text-gray-500 opacity-40'   // ← dimmed untyped
               }`}
             >
               {char === ' ' ? '\u00A0' : char}
 
-              {/* CARET — only on current index */}
+              {/* CYAN CARET */}
               {i === charIndex && (
-                <span className="absolute -left-1 top-0 h-full w-1 bg-cyan-400 animate-pulse" />
+                <span className="absolute -left-1 top-0 h-full w-1 bg-cyan-400 animate-pulse opacity-80" />
               )}
             </span>
           ))}
@@ -125,12 +136,12 @@ export default function TypingEngine({ terms }: { terms: { term: string; def: st
       </div>
 
       {/* Bottom bar */}
-      <div className="fixed bottom-12 flex gap-12 text-xl text-gray-400">
+      <div className="fixed bottom-12 flex gap-16 text-2xl text-gray-400">
         <span>
           {termIndex + 1} / {terms.length}
         </span>
-        <span className="text-cyan-400">
-          {charIndex === chars.length ? 'Press Enter →' : 'Keep typing'}
+        <span className={isFinished ? 'text-green-400' : 'text-cyan-400'}>
+          {isFinished ? 'Press Enter →' : 'Keep typing'}
         </span>
       </div>
     </div>
