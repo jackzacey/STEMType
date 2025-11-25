@@ -1,9 +1,5 @@
-import type { Metadata } from 'next'
+// app/layout.tsx
 import './globals.css'
-
-export const metadata: Metadata = {
-  title: 'STEMTYPE',
-}
 
 export default function RootLayout({
   children,
