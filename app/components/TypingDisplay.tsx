@@ -2,7 +2,7 @@
 'use client';
 
 type Props = {
-  term: { term: string; def: string };
+  currentTerm: { term: string; def: string } | undefined;
   chars: string[];
   states: ('untyped' | 'correct' | 'incorrect')[];
   cursor: number;
@@ -12,11 +12,38 @@ type Props = {
   totalTerms: number;
 };
 
-export default function TypingDisplay({ term, chars, states, cursor, extra, isPerfect, termIndex, totalTerms }: Props) {
+const getCharClass = (state: 'untyped' | 'correct' | 'incorrect') => {
+  switch (state) {
+    case 'correct':   return 'text-green-400 font-bold drop-shadow-lg';
+    case 'incorrect': return 'text-red-500 font-bold underline decoration-red-500/70 decoration-2';
+    case 'untyped':   return 'text-gray-300';
+  }
+};
+
+export default function TypingDisplay({
+  currentTerm,
+  chars,
+  states,
+  cursor,
+  extra,
+  isPerfect,
+  termIndex,
+  totalTerms,
+}: Props) {
+  if (!currentTerm) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-black">
+        <div className="text-9xl md:text-[14rem] font-black text-green-400 animate-pulse">
+          UNIT COMPLETE! 🎉
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-black flex flex-col items-center justify-center px-8 font-mono select-none">
-      <h1 className="text-6xl md:text-8xl lg:text-9xl font-black text-cyan-400 mb-20 text-center tracking-tight">
-        {term.term}
+      <h1 className="text-7xl md:text-9xl lg:text-10xl font-black text-cyan-400 mb-20 text-center tracking-tight">
+        {currentTerm.term}
       </h1>
 
       <div className="relative max-w-7xl">
@@ -24,35 +51,33 @@ export default function TypingDisplay({ term, chars, states, cursor, extra, isPe
           {chars.map((ch, i) => (
             <span
               key={i}
-              className={`relative inline-block transition-colors duration-100 ${
-                states[i] === 'correct'
-                  ? 'text-green-400 font-bold'
-                  : states[i] === 'incorrect'
-                    ? 'text-red-500 underline decoration-red-500/70 decoration-2'
-                    : 'text-gray-300'
-              }`}
+              className={`relative inline-block transition-all duration-100 ${getCharClass(states[i])}`}
             >
               {ch === ' ' ? '\u00A0' : ch}
               {i === cursor && (
-                <span className="absolute -left-1 top-0 h-full w-1.5 bg-cyan-400 animate-pulse" />
+                <span className="absolute left-0 top-0 h-full w-1.5 bg-cyan-400 animate-pulse shadow-cyan" />
               )}
             </span>
           ))}
+
           {extra.split('').map((ch, i) => (
-            <span key={`extra-${i}`} className="text-red-500 bg-red-500/20 px-1 rounded font-bold">
+            <span
+              key={`extra-${i}`}
+              className="text-red-500 bg-red-600/40 px-2 rounded font-bold animate-pulse"
+            >
               {ch}
             </span>
           ))}
         </div>
       </div>
 
-      <div className="mt-32 text-5xl md:text-7xl font-black text-center">
+      <div className="mt-32 text-6xl md:text-8xl font-black">
         <span className={isPerfect ? 'text-green-400' : 'text-cyan-400'}>
           {isPerfect ? 'Press Enter →' : 'Keep typing'}
         </span>
       </div>
 
-      <div className="fixed bottom-10 text-xl text-gray-400">
+      <div className="fixed bottom-12 text-xl text-gray-500">
         {termIndex + 1} / {totalTerms}
       </div>
     </div>
