@@ -19,12 +19,15 @@ export default function TypingEngine({ terms }: { terms: { term: string; def: st
     focusRef,
   } = useTypingTest(terms);
 
-  if (!term) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-black text-green-400">
-      <div className="text-9xl md:text-[14rem] font-black animate-pulse">UNIT COMPLETE! 🎉</div>
-    </div>;
-  }
+ if (!term) {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-black">
+      <div className="text-9xl md:text-[14rem] font-black text-green-400 animate-pulse tracking-tight">
+        UNIT COMPLETE! 🎉
+      </div>
+    </div>
+  );
+}
 
   return (
     <>
