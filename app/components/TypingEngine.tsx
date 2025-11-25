@@ -14,6 +14,7 @@ export default function TypingEngine({ terms }: { terms: { term: string; def: st
   const cursorRef = useRef(0);
   const statesRef = useRef<CharState[]>([]);
   const extraRef = useRef('');
+  const charsRef = useRef<string[]>([]); // ← THIS WAS THE MISSING LINE
 
   const current = terms[termIndex];
   if (!current) {
@@ -28,8 +29,8 @@ export default function TypingEngine({ terms }: { terms: { term: string; def: st
 
   const chars = current.def.split('');
 
-  // Reset on new term
   useEffect(() => {
+    charsRef.current = chars; // ← Also set it here
     cursorRef.current = 0;
     statesRef.current = chars.map(() => 'untyped');
     extraRef.current = '';
@@ -38,21 +39,16 @@ export default function TypingEngine({ terms }: { terms: { term: string; def: st
     setExtra('');
   }, [termIndex]);
 
-  // Hidden input to capture keyboard
   const hiddenInputRef = useRef<HTMLInputElement>(null);
   const focusInput = () => hiddenInputRef.current?.focus();
-  useEffect(() => {
-    focusInput();
-  }, [termIndex]);
+  useEffect(() => focusInput(), [termIndex]);
 
-  // Handle typing
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ([' ', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
         e.preventDefault();
       }
 
-      // ENTER → complete only if perfect
       if (e.key === 'Enter') {
         e.preventDefault();
         const perfect =
@@ -66,7 +62,6 @@ export default function TypingEngine({ terms }: { terms: { term: string; def: st
         return;
       }
 
-      // BACKSPACE
       if (e.key === 'Backspace') {
         e.preventDefault();
         if (extraRef.current) {
@@ -81,11 +76,10 @@ export default function TypingEngine({ terms }: { terms: { term: string; def: st
         return;
       }
 
-      // Normal character
       if (e.key.length === 1) {
         e.preventDefault();
         if (cursorRef.current < chars.length) {
-          const correct = e.key === charsRef.current[cursorRef.current];
+          const correct = e.key === charsRef.current[cursorRef.current]; // ← Now works
           statesRef.current[cursorRef.current] = correct ? 'correct' : 'incorrect';
           cursorRef.current++;
           setCursor(cursorRef.current);
@@ -105,7 +99,6 @@ export default function TypingEngine({ terms }: { terms: { term: string; def: st
 
   return (
     <>
-      {/* HIDDEN INPUT — completely offscreen */}
       <input
         ref={hiddenInputRef}
         type="text"
@@ -119,12 +112,10 @@ export default function TypingEngine({ terms }: { terms: { term: string; def: st
         className="min-h-screen bg-[#0f1724] flex flex-col items-center justify-center px-8 text-white font-mono select-none cursor-default"
         onClick={focusInput}
       >
-        {/* Term */}
         <h1 className="text-6xl md:text-8xl lg:text-9xl font-black text-cyan-400 mb-20 tracking-tight text-center">
           {current.term}
         </h1>
 
-        {/* Definition text */}
         <div className="relative max-w-6xl w-full">
           <div
             className="text-5xl md:text-7xl lg:text-8xl leading-snug text-center tracking-wider"
@@ -137,8 +128,8 @@ export default function TypingEngine({ terms }: { terms: { term: string; def: st
                   states[i] === 'correct'
                     ? 'text-white'
                     : states[i] === 'incorrect'
-                    ? 'text-red-500'
-                    : 'text-gray-400 opacity-50'
+                      ? 'text-red-500'
+                      : 'text-gray-400 opacity-50'
                 }`}
               >
                 {ch === ' ' ? '\u00A0' : ch}
@@ -147,7 +138,6 @@ export default function TypingEngine({ terms }: { terms: { term: string; def: st
                 )}
               </span>
             ))}
-
             {extra.split('').map((ch, i) => (
               <span key={`extra-${i}`} className="text-red-500 bg-red-500/20 rounded-sm">
                 {ch}
@@ -156,15 +146,13 @@ export default function TypingEngine({ terms }: { terms: { term: string; def: st
           </div>
         </div>
 
-        {/* Bottom message */}
         <div className="mt-24 text-4xl md:text-6xl text-center">
           <span className={isPerfect ? 'text-green-400 font-bold' : 'text-cyan-400 font-semibold'}>
             {isPerfect ? 'Press Enter →' : 'Keep typing'}
           </span>
         </div>
 
-        {/* Progress */}
-        <div className="fixed bottom-10 text-xl text-gray-400 text-center w-full">
+        <div className="fixed bottom-10 text-xl text-gray-400 w-full text-center">
           {termIndex + 1} / {terms.length}
         </div>
       </div>
