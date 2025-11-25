@@ -12,11 +12,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className="bg-black">
-      <body
-        className="min-h-screen bg-black text-slate-100"
-        style={{ backgroundColor: '#000000', color: '#e2e8f0' }}
-      >
+    <html lang="en">
+      <body className="min-h-screen bg-transparent text-white">
         {children}
       </body>
     </html>
