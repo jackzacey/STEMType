@@ -1,3 +1,4 @@
+// app/components/TypingEngine.tsx
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
@@ -14,13 +15,16 @@ export default function TypingEngine({ terms }: { terms: { term: string; def: st
   const cursorRef = useRef(0);
   const statesRef = useRef<CharState[]>([]);
   const extraRef = useRef('');
-  const charsRef = useRef<string[]>([]); // ← THIS WAS THE MISSING LINE
+  const charsRef = useRef<string[]>([]);
+
+  const hiddenInputRef = useRef<HTMLInputElement>(null);
+  const focus = () => hiddenInputRef.current?.focus();
 
   const current = terms[termIndex];
   if (!current) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#0f1724]">
-        <div className="text-9xl md:text-[10rem] font-black text-green-400 tracking-tight text-center animate-pulse">
+        <div className="text-9xl md:text-[14rem] font-black text-green-400 animate-pulse tracking-tight text-center">
           UNIT COMPLETE! 🎉
         </div>
       </div>
@@ -30,33 +34,25 @@ export default function TypingEngine({ terms }: { terms: { term: string; def: st
   const chars = current.def.split('');
 
   useEffect(() => {
-    charsRef.current = chars; // ← Also set it here
+    charsRef.current = chars;
     cursorRef.current = 0;
     statesRef.current = chars.map(() => 'untyped');
     extraRef.current = '';
     setCursor(0);
     setStates([...statesRef.current]);
     setExtra('');
+    setTimeout(focus, 0);
   }, [termIndex]);
-
-  const hiddenInputRef = useRef<HTMLInputElement>(null);
-  const focusInput = () => hiddenInputRef.current?.focus();
-  useEffect(() => focusInput(), [termIndex]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ([' ', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
-        e.preventDefault();
-      }
-
       if (e.key === 'Enter') {
         e.preventDefault();
-        const perfect =
-          cursorRef.current === chars.length &&
-          statesRef.current.every(s => s === 'correct') &&
-          extraRef.current === '';
+        const perfect = cursorRef.current === charsRef.current.length &&
+                        statesRef.current.every(s => s === 'correct') &&
+                        extraRef.current === '';
         if (perfect) {
-          confetti({ particleCount: 400, spread: 120, origin: { y: 0.55 } });
+          confetti({ particleCount: 600, spread: 160, origin: { y: 0.55 } });
           setTermIndex(i => i + 1);
         }
         return;
@@ -78,12 +74,12 @@ export default function TypingEngine({ terms }: { terms: { term: string; def: st
 
       if (e.key.length === 1) {
         e.preventDefault();
-        if (cursorRef.current < chars.length) {
-          const correct = e.key === charsRef.current[cursorRef.current]; // ← Now works
+        if (cursorRef.current < charsRef.current.length) {
+          const correct = e.key === charsRef.current[cursorRef.current];
           statesRef.current[cursorRef.current] = correct ? 'correct' : 'incorrect';
           cursorRef.current++;
-          setCursor(cursorRef.current);
           setStates([...statesRef.current]);
+          setCursor(cursorRef.current);
         } else {
           extraRef.current += e.key;
           setExtra(extraRef.current);
@@ -99,60 +95,61 @@ export default function TypingEngine({ terms }: { terms: { term: string; def: st
 
   return (
     <>
+      {/* INVISIBLE INPUT — GONE FROM EXISTENCE */}
       <input
         ref={hiddenInputRef}
         type="text"
         autoFocus
         aria-hidden
-        className="fixed top-[-9999px] left-[-9999px] w-0 h-0 opacity-0 outline-none border-none"
-        style={{ caretColor: 'transparent', pointerEvents: 'none', userSelect: 'none' }}
+        className="fixed -top-96 -left-96 w-1 h-1 opacity-0 outline-none border-none"
+        style={{ caretColor: 'transparent', pointerEvents: 'none' }}
       />
 
       <div
-        className="min-h-screen bg-[#0f1724] flex flex-col items-center justify-center px-8 text-white font-mono select-none cursor-default"
-        onClick={focusInput}
+        className="min-h-screen bg-[#0f1724] flex flex-col items-center justify-center px-8 text-white font-mono select-none"
+        onClick={focus}
       >
-        <h1 className="text-6xl md:text-8xl lg:text-9xl font-black text-cyan-400 mb-20 tracking-tight text-center">
+        <h1 className="text-7xl md:text-9xl lg:text-10xl font-black text-cyan-400 mb-24 tracking-tight text-center">
           {current.term}
         </h1>
 
-        <div className="relative max-w-6xl w-full">
+        <div className="relative max-w-7xl">
           <div
-            className="text-5xl md:text-7xl lg:text-8xl leading-snug text-center tracking-wider"
-            style={{ fontFamily: '"Roboto Mono", ui-monospace, monospace', letterSpacing: '0.04em' }}
+            className="text-6xl md:text-8xl lg:text-9xl leading-snug text-center tracking-wider"
+            style={{ fontFamily: '"Roboto Mono", ui-monospace, monospace', letterSpacing: '0.05em' }}
           >
             {chars.map((ch, i) => (
               <span
                 key={i}
-                className={`relative inline-block transition-colors duration-150 ${
+                className={`relative inline-block transition-all duration-150 font-bold ${
                   states[i] === 'correct'
-                    ? 'text-white'
+                    ? 'text-green-400 drop-shadow-lg'
                     : states[i] === 'incorrect'
                       ? 'text-red-500'
-                      : 'text-gray-400 opacity-50'
+                      : 'text-gray-300'
                 }`}
               >
                 {ch === ' ' ? '\u00A0' : ch}
                 {i === cursor && (
-                  <span className="absolute -left-1 top-0 h-full w-1.5 bg-cyan-400 animate-pulse" />
+                  <span className="absolute -left-1 top-0 h-full w-2 bg-cyan-400 animate-pulse shadow-cyan" />
                 )}
               </span>
             ))}
             {extra.split('').map((ch, i) => (
-              <span key={`extra-${i}`} className="text-red-500 bg-red-500/20 rounded-sm">
+              <span key={`extra-${i}`} className="text-red-500 bg-red-500/30 px-2 rounded font-bold">
                 {ch}
               </span>
             ))}
           </div>
         </div>
 
-        <div className="mt-24 text-4xl md:text-6xl text-center">
-          <span className={isPerfect ? 'text-green-400 font-bold' : 'text-cyan-400 font-semibold'}>
+        <div className="mt-32 text-5xl md:text-7xl lg:text-8xl font-black text-center">
+          <span className={isPerfect ? 'text-green-400' : 'text-cyan-400'}>
             {isPerfect ? 'Press Enter →' : 'Keep typing'}
           </span>
         </div>
 
-        <div className="fixed bottom-10 text-xl text-gray-400 w-full text-center">
+        <div className="fixed bottom-12 text-2xl text-gray-400">
           {termIndex + 1} / {terms.length}
         </div>
       </div>
