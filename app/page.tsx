@@ -1,18 +1,18 @@
 // app/page.tsx
 export default function Home() {
   return (
-    <main className="relative min-h-screen">
-      {/* BLACK HOLE — GUARANTEED TO SHOW */}
+    <>
+      {/* BLACK HOLE VIDEO — FULLSCREEN, ALWAYS BEHIND */}
       <video
         autoPlay
         loop
         muted
         playsInline
-        className="fixed top-0 left-0 w-full h-full object-cover"
+        className="fixed inset-0 w-full h-full object-cover -z-50 bg-black"
         src="https://videos.pexels.com/video-files/855564/855564-hd_1920_1080_60fps.mp4"
       />
 
-      {/* CONTENT — ALWAYS ON TOP */}
+      {/* CONTENT — RELATIVE + Z-INDEX 10 */}
       <div className="relative z-10 min-h-screen flex flex-col items-center justify-center text-white px-8">
         <h1 className="text-8xl md:text-9xl lg:text-[12rem] font-black tracking-tighter drop-shadow-2xl">
           STEMTYPE
@@ -24,6 +24,6 @@ export default function Home() {
           ENTER
         </button>
       </div>
-    </main>
+    </>
   )
 }
