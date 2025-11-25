@@ -1,0 +1,8 @@
+.word { display: inline-block; }
+.letter { display: inline-block; }
+
+/* Monkeytype-style colors */
+.correct { color: #4ade80; }
+.incorrect { color: #f87171; }
+.current { color: #60a5fa; }
+.next { color: #e2e2e2; }
