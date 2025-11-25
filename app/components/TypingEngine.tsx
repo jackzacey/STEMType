@@ -3,10 +3,13 @@
 import { useState, useEffect, useRef } from 'react';
 import confetti from 'canvas-confetti';
 
+type CharState = 'untyped' | 'correct' | 'incorrect';
+
 export default function TypingEngine({ terms }: { terms: { term: string; def: string }[] }) {
   const [termIndex, setTermIndex] = useState(0);
-  const [input, setInput] = useState('');
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [cursor, setCursor] = useState(0);
+  const [states, setStates] = useState<CharState[]>([]);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const current = terms[termIndex];
   if (!current) {
@@ -17,56 +20,89 @@ export default function TypingEngine({ terms }: { terms: { term: string; def: st
     );
   }
 
-  const expected = current.def;
+  const chars = current.def.split('');
 
+  // Reset everything when term changes
+  useEffect(() => {
+    setCursor(0);
+    setStates(chars.map(() => 'untyped'));
+  }, [termIndex]);
+
+  // The invisible input — ONLY to steal focus, never reads value
+  const inputRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
     inputRef.current?.focus();
   }, [termIndex]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    // Prevent typing past the expected length + extra chars
-    if (value.length > expected.length + 50) return;
-    setInput(value);
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      if (input === expected) {
-        confetti({
-          particleCount: 400,
-          spread: 120,
-          origin: { y: 0.55 },
-        });
-        setTimeout(() => {
-          setTermIndex(i => i + 1);
-          setInput('');
-        }, 300);
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Prevent page scroll, zoom, etc.
+      if ([' ', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+        e.preventDefault();
       }
-    }
-  };
+
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const finished = cursor === chars.length && states.every(s => s === 'correct');
+        if (finished) {
+          confetti({
+            particleCount: 400,
+            spread: 130,
+            origin: { y: 0.55 },
+          });
+          setTermIndex(i => i + 1);
+        }
+        return;
+      }
+
+      if (e.key === 'Backspace') {
+        e.preventDefault();
+        if (cursor > 0) {
+          setCursor(c => c - 1);
+          setStates(prev => {
+            const next = [...prev];
+            next[cursor - 1] = 'untyped';
+            return next;
+          });
+        }
+        return;
+      }
+
+      // Normal character
+      if (e.key.length === 1 && cursor < chars.length) {
+        e.preventDefault();
+        const correct = e.key === chars[cursor];
+        setStates(prev => {
+          const next = [...prev];
+          next[cursor] = correct ? 'correct' : 'incorrect';
+          return next;
+        });
+        setCursor(c => c + 1);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [cursor, states, chars, termIndex]);
+
+  const isComplete = cursor === chars.length && states.every(s => s === 'correct');
 
   return (
     <>
-      {/* THE HIDDEN INPUT — this is the real MonkeyType trick */}
+      {/* Invisible focus-stealer — pointer-events auto, opacity 0 */}
       <input
         ref={inputRef}
         type="text"
-        value={input}
-        onChange={handleChange}
-        onKeyDown={handleKeyDown}
-        className="fixed inset-0 opacity-0 pointer-events-none"
+        className="fixed inset-0 opacity-0"
         autoFocus
+        tabIndex={-1}
       />
 
       <div className="flex min-h-screen flex-col items-center justify-center bg-[#1e1e1e] px-8 font-mono text-white">
-        {/* Term */}
         <h1 className="mb-20 text-6xl font-black text-cyan-400 md:text-8xl tracking-tight">
           {current.term}
         </h1>
 
-        {/* Text */}
         <div className="relative max-w-6xl">
           <div
             className="text-center text-6xl leading-snug tracking-wider md:text-7xl lg:text-8xl"
@@ -76,45 +112,32 @@ export default function TypingEngine({ terms }: { terms: { term: string; def: st
               lineHeight: '1.5',
             }}
           >
-            {expected.split('').map((char, i) => {
-              const typed = input[i];
-              const isCorrect = typed === char;
-              const isWrong = typed !== undefined && typed !== char;
-              const isUntyped = input.length <= i;
+            {chars.map((char, i) => (
+              <span
+                key={i}
+                className={`relative inline-block transition-all duration-75 ${
+                  states[i] === 'correct'
+                    ? 'text-white'
+                    : states[i] === 'incorrect'
+                      ? 'text-red-500'
+                      : 'text-gray-500 opacity-40'
+                }`}
+              >
+                {char === ' ' ? '\u00A0' : char}
 
-              return (
-                <span
-                  key={i}
-                  className={`relative inline-block transition-all duration-100 ${
-                    isUntyped ? 'text-gray-500 opacity-40' :
-                    isCorrect ? 'text-white' :
-                    'text-red-500'
-                  }`}
-                >
-                  {char === ' ' ? '\u00A0' : char}
-
-                  {/* CARET */}
-                  {i === input.length && (
-                    <span className="absolute -left-1 top-0 h-full w-1 bg-cyan-400 animate-pulse opacity-80" />
-                  )}
-                </span>
-              );
-            })}
-
-            {/* Extra characters */}
-            {input.slice(expected.length).split('').map((char, i) => (
-              <span key={`extra-${i}`} className="text-red-500 bg-red-500/30">
-                {char}
+                {/* Blinking cyan caret */}
+                {i === cursor && (
+                  <span className="absolute -left-1 top-0 h-full w-1.5 bg-cyan-400 animate-pulse" />
+                )}
               </span>
             ))}
           </div>
         </div>
 
-        {/* Bottom bar */}
         <div className="fixed bottom-12 flex gap-16 text-2xl text-gray-400">
           <span>{termIndex + 1} / {terms.length}</span>
-          <span className={input === expected ? 'text-green-400' : 'text-cyan-400'}>
-            {input === expected ? 'Press Enter →' : 'Keep typing'}
+          <span className={isComplete ? 'text-green-400' : 'text-cyan-400'}>
+            {isComplete ? 'Press Enter →' : 'Keep typing'}
           </span>
         </div>
       </div>
