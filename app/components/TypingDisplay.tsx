@@ -5,7 +5,6 @@ type Props = {
   term: string;
   chars: string[];
   states: ('untyped' | 'correct' | 'incorrect')[];
-  [];
   cursor: number;
   extra: string;
   isPerfect: boolean;
