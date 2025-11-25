@@ -19,7 +19,7 @@ export default function TypingEngine({ terms }: { terms: { term: string; def: st
 
   return (
     <TypingDisplay
-      term={term.term}
+      term={term}   // ← pass the whole object, not just the string
       chars={chars}
       states={states}
       cursor={cursor}
