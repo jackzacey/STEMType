@@ -1,15 +1,15 @@
 // app/page.tsx
 export default function Home() {
   return (
-    <div className="relative min-h-screen">
-      {/* MOVING BLACK HOLE GIF — FULL-SCREEN EVENT HORIZON */}
+    <div className="fixed inset-0 -z-10">
+      {/* FULL-BLEED BLACK HOLE — TOUCHES EVERY PIXEL */}
       <img
         src="https://svs.gsfc.nasa.gov/vis/a010000/a014100/a014132/BHW_Disk_and_Corona.gif"
         alt="Black Hole Event Horizon"
-        className="fixed inset-0 w-full h-full object-cover z-0"
+        className="absolute inset-0 w-full h-full object-cover"
       />
 
-      {/* WHITE TEXT — FLOATING ON TOP */}
+      {/* CONTENT — STILL FLOATS PERFECTLY ON TOP */}
       <div className="relative z-10 min-h-screen flex flex-col items-center justify-center text-white px-8 text-center">
         <h1 className="text-8xl md:text-9xl lg:text-[12rem] font-black tracking-tighter drop-shadow-2xl">
           STEMTYPE
