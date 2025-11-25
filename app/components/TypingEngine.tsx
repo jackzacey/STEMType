@@ -14,22 +14,23 @@ export default function TypingEngine({ terms }: { terms: { term: string; def: st
   const cursorRef = useRef(0);
   const statesRef = useRef<CharState[]>([]);
   const extraRef = useRef('');
-
-  const hiddenInputRef = useRef<HTMLInputElement>(null);
+  const charsRef = useRef<string[]>([]);
 
   const current = terms[termIndex];
   if (!current) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#1e1e1e] text-9xl font-bold text-green-400">
-        UNIT COMPLETE! 🎉
+      <div className="flex min-h-screen items-center justify-center bg-[#0f1724]">
+        <div className="text-9xl md:text-10xl font-black text-green-400 tracking-tight text-center animate-pulse">
+          UNIT COMPLETE! 🎉
+        </div>
       </div>
     );
   }
 
   const chars = current.def.split('');
 
-  // Reset on new term
   useEffect(() => {
+    charsRef.current = chars;
     cursorRef.current = 0;
     statesRef.current = chars.map(() => 'untyped');
     extraRef.current = '';
@@ -38,32 +39,27 @@ export default function TypingEngine({ terms }: { terms: { term: string; def: st
     setExtra('');
   }, [termIndex]);
 
-  // Always keep focus on hidden input
-  const refocus = () => hiddenInputRef.current?.focus();
-  useEffect(refocus, [termIndex]);
+  const hiddenInputRef = useRef<HTMLInputElement>(null);
+  const focusInput = () => hiddenInputRef.current?.focus();
+
+  useEffect(() => {
+    focusInput();
+  }, [termIndex]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Prevent default scroll & browser shortcuts
-      if ([' ', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
-        e.preventDefault();
-      }
+      if (e.key === ' ' || e.key.startsWith('Arrow')) e.preventDefault();
 
-      // ENTER → submit only if perfect
       if (e.key === 'Enter') {
         e.preventDefault();
-        const perfect =
-          cursorRef.current === chars.length &&
-          statesRef.current.every(s => s === 'correct') &&
-          extraRef.current === '';
+        const perfect = cursorRef.current === chars.length && statesRef.current.every(s => s === 'correct') && extraRef.current === '';
         if (perfect) {
-          confetti({ particleCount: 400, spread: 130, origin: { y: 0.55 } });
+          confetti({ particleCount: 400, spread: 120, origin: { y: 0.6 } });
           setTermIndex(i => i + 1);
         }
         return;
       }
 
-      // BACKSPACE
       if (e.key === 'Backspace') {
         e.preventDefault();
         if (extraRef.current) {
@@ -78,15 +74,13 @@ export default function TypingEngine({ terms }: { terms: { term: string; def: st
         return;
       }
 
-      // Printable character
       if (e.key.length === 1) {
         e.preventDefault();
-
         if (cursorRef.current < chars.length) {
           const correct = e.key === chars[cursorRef.current];
           statesRef.current[cursorRef.current] = correct ? 'correct' : 'incorrect';
-          setStates([...statesRef.current]);
           cursorRef.current++;
+          setStates([...statesRef.current]);
           setCursor(cursorRef.current);
         } else {
           extraRef.current += e.key;
@@ -95,84 +89,55 @@ export default function TypingEngine({ terms }: { terms: { term: string; def: st
       }
     };
 
-    // IME (composition) support
-    const handleCompositionStart = () => {};
-    const handleCompositionEnd = (e: CompositionEvent) => {
-      const text = e.data || '';
-      for (const ch of text) {
-        if (cursorRef.current < chars.length) {
-          const correct = ch === chars[cursorRef.current];
-          statesRef.current[cursorRef.current] = correct ? 'correct' : 'incorrect';
-          cursorRef.current++;
-        } else {
-          extraRef.current += ch;
-        }
-      }
-      setStates([...statesRef.current]);
-      setCursor(cursorRef.current);
-      setExtra(extraRef.current);
-    };
-
     window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('compositionstart', handleCompositionStart);
-    window.addEventListener('compositionend', handleCompositionEnd);
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('compositionstart', handleCompositionStart);
-      window.removeEventListener('compositionend', handleCompositionEnd);
-    };
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, [termIndex]);
 
   const isPerfect = cursor === chars.length && states.every(s => s === 'correct') && extra === '';
 
   return (
     <>
-      {/* Invisible focus-stealer — off-screen, no caret, never visible */}
+      {/* TEXTBOX IS DEAD — OFF-SCREEN, NO CARET, NO FLASH */}
       <input
         ref={hiddenInputRef}
         type="text"
         autoFocus
         aria-hidden
-        className="fixed -top-96 -left-96 w-0 h-0 opacity-0 outline-none border-none"
+        className="fixed -top-96 -left-96 w-1 h-1 opacity-0 outline-none border-none"
         style={{ caretColor: 'transparent', pointerEvents: 'none' }}
       />
 
+      {/* FULL SCREEN CENTERED LAYOUT */}
       <div
-        className="flex min-h-screen flex-col items-center justify-center bg-[#1e1e1e] px-8 font-mono text-white select-none cursor-default"
-        onClick={refocus}
+        className="min-h-screen bg-[#0f1724] flex flex-col items-center justify-center px-8 text-white font-mono select-none"
+        onClick={focusInput}
       >
-        <h1 className="mb-20 text-6xl font-black text-cyan-400 md:text-8xl tracking-tight">
+        {/* Term — perfectly centered */}
+        <h1 className="text-6xl md:text-8xl lg:text-9xl font-black text-cyan-400 mb-20 tracking-tight text-center">
           {current.term}
         </h1>
 
-        <div className="relative max-w-7xl">
+        {/* Definition text — perfectly centered */}
+        <div className="relative max-w-6xl w-full">
           <div
-            className="text-center text-6xl leading-snug tracking-wider md:text-7xl lg:text-8xl"
-            style={{
-              fontFamily: '"Roboto Mono", ui-monospace, monospace',
-              letterSpacing: '0.04em',
-              lineHeight: '1.5',
-            }}
+            className="text-5xl md:text-7xl lg:text-8xl leading-snug text-center tracking-wider"
+            style={{ fontFamily: '"Roboto Mono", ui-monospace, monospace', letterSpacing: '0.04em' }}
           >
-            {chars.map((char, i) => (
+            {chars.map((ch, i) => (
               <span
                 key={i}
                 className={`relative inline-block transition-colors duration-100 ${
-                  states[i] === 'correct'
-                    ? 'text-white'
-                    : states[i] === 'incorrect'
-                      ? 'text-red-500'
-                      : 'text-gray-500 opacity-40'
+                  states[i] === 'correct' ? 'text-white' :
+                  states[i] === 'incorrect' ? 'text-red-500' :
+                  'text-gray-500 opacity-40'
                 }`}
               >
-                {char === ' ' ? '\u00A0' : char}
+                {ch === ' ' ? '\u00A0' : ch}
                 {i === cursor && (
                   <span className="absolute -left-1 top-0 h-full w-1.5 bg-cyan-400 animate-pulse" />
                 )}
               </span>
             ))}
-
             {extra.split('').map((ch, i) => (
               <span key={`extra-${i}`} className="text-red-500 bg-red-500/20">
                 {ch}
@@ -181,11 +146,16 @@ export default function TypingEngine({ terms }: { terms: { term: string; def: st
           </div>
         </div>
 
-        <div className="fixed bottom-12 flex gap-16 text-2xl text-gray-400">
-          <span>{termIndex + 1} / {terms.length}</span>
-          <span className={isPerfect ? 'text-green-400' : 'text-cyan-400'}>
+        {/* Bottom feedback — centered, big, beautiful */}
+        <div className="mt-24 text-4xl md:text-6xl text-center">
+          <span className={isPerfect ? 'text-green-400 font-bold' : 'text-cyan-400'}>
             {isPerfect ? 'Press Enter →' : 'Keep typing'}
           </span>
+        </div>
+
+        {/* Progress */}
+        <div className="fixed bottom-10 text-xl text-gray-500">
+          {termIndex + 1} / {terms.length}
         </div>
       </div>
     </>
