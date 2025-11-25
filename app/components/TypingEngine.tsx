@@ -8,12 +8,10 @@ type CharState = 'untyped' | 'correct' | 'incorrect';
 export default function TypingEngine({ terms }: { terms: { term: string; def: string }[] }) {
   const [termIndex, setTermIndex] = useState(0);
 
-  // Live state for React rendering
   const [cursor, setCursor] = useState(0);
   const [states, setStates] = useState<CharState[]>([]);
   const [extra, setExtra] = useState('');
 
-  // Refs — never stale
   const cursorRef = useRef(0);
   const statesRef = useRef<CharState[]>([]);
   const extraRef = useRef('');
@@ -35,24 +33,21 @@ export default function TypingEngine({ terms }: { terms: { term: string; def: st
     statesRef.current = chars.map(() => 'untyped');
     extraRef.current = '';
     setCursor(0);
-    setStates(statesRef.current);
+    setStates([...statesRef.current]); // Clone to force re-render
     setExtra('');
   }, [termIndex]);
 
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Always keep focus
   const refocus = () => inputRef.current?.focus();
   useEffect(refocus, [termIndex]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Prevent scroll, arrows, space default behavior
       if ([' ', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
         e.preventDefault();
       }
 
-      // ENTER → submit only if perfect
       if (e.key === 'Enter') {
         e.preventDefault();
         const perfect =
@@ -66,7 +61,6 @@ export default function TypingEngine({ terms }: { terms: { term: string; def: st
         return;
       }
 
-      // BACKSPACE
       if (e.key === 'Backspace') {
         e.preventDefault();
         if (extraRef.current) {
@@ -81,15 +75,14 @@ export default function TypingEngine({ terms }: { terms: { term: string; def: st
         return;
       }
 
-      // Printable character
       if (e.key.length === 1) {
         e.preventDefault();
 
         if (cursorRef.current < chars.length) {
           const correct = e.key === chars[cursorRef.current];
           statesRef.current[cursorRef.current] = correct ? 'correct' : 'incorrect';
-          setStates([...statesRef.current]);
           cursorRef.current++;
+          setStates([...statesRef.current]);
           setCursor(cursorRef.current);
         } else {
           extraRef.current += e.key;
@@ -98,9 +91,12 @@ export default function TypingEngine({ terms }: { terms: { term: string; def: st
       }
     };
 
-    // Full IME support
-    const startComposition = () => e => e.preventDefault();
-    const endComposition = () => (e: any) => {
+    // FIXED IME HANDLING — FULLY TYPED & WORKING
+    const handleCompositionStart = (e: CompositionEvent) => {
+      e.preventDefault();
+    };
+
+    const handleCompositionEnd = (e: CompositionEvent) => {
       const text = e.data || '';
       for (const ch of text) {
         if (cursorRef.current < chars.length) {
@@ -117,13 +113,13 @@ export default function TypingEngine({ terms }: { terms: { term: string; def: st
     };
 
     window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('compositionstart', startComposition);
-    window.addEventListener('compositionend', endComposition);
+    window.addEventListener('compositionstart', handleCompositionStart);
+    window.addEventListener('compositionend', handleCompositionEnd);
 
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('compositionstart', startComposition);
-      window.removeEventListener('compositionend', endComposition);
+      window.removeEventListener('compositionstart', handleCompositionStart);
+      window.removeEventListener('compositionend', handleCompositionEnd);
     };
   }, [termIndex]);
 
@@ -131,11 +127,11 @@ export default function TypingEngine({ terms }: { terms: { term: string; def: st
 
   return (
     <>
-      {/* Invisible, focusable input — no pointer-events-none, no tabIndex=-1 */}
+      {/* INVISIBLE INPUT — OFF-SCREEN, NO FLASHING CARET */}
       <input
         ref={inputRef}
         type="text"
-        className="fixed inset-0 opacity-0 outline-none caret-transparent"
+        className="fixed -top-[9999px] left-0 opacity-0 outline-none caret-transparent"
         autoFocus
         onClick={refocus}
       />
@@ -175,7 +171,6 @@ export default function TypingEngine({ terms }: { terms: { term: string; def: st
               </span>
             ))}
 
-            {/* Extra characters */}
             {extra.split('').map((ch, i) => (
               <span key={`extra-${i}`} className="text-red-500 bg-red-500/20">
                 {ch}
