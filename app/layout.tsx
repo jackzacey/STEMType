@@ -1,9 +1,13 @@
+// app/layout.tsx
 import type { Metadata } from 'next'
+import { Inter } from 'next/font/google'
 import './globals.css'
 
+const inter = Inter({ subsets: ['latin'] })
+
 export const metadata: Metadata = {
-  title: 'STEMType',
-  description: 'Master Biology & Chemistry by typing',
+  title: 'STEMTYPE',
+  description: 'Type the Universe',
 }
 
 export default function RootLayout({
@@ -13,7 +17,8 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="min-h-screen bg-transparent text-white">
+      {/* THIS IS THE ONLY CHANGE — body has NO background */}
+      <body className={inter.className}>
         {children}
       </body>
     </html>
