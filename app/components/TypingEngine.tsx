@@ -48,7 +48,6 @@ export default function TypingEngine({ terms }: { terms: { term: string; def: st
   // Handle typing
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Prevent scroll
       if ([' ', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
         e.preventDefault();
       }
@@ -86,7 +85,7 @@ export default function TypingEngine({ terms }: { terms: { term: string; def: st
       if (e.key.length === 1) {
         e.preventDefault();
         if (cursorRef.current < chars.length) {
-          const correct = e.key === chars[cursorRef.current];
+          const correct = e.key === charsRef.current[cursorRef.current];
           statesRef.current[cursorRef.current] = correct ? 'correct' : 'incorrect';
           cursorRef.current++;
           setCursor(cursorRef.current);
@@ -106,7 +105,7 @@ export default function TypingEngine({ terms }: { terms: { term: string; def: st
 
   return (
     <>
-      {/* HIDDEN INPUT — completely offscreen to remove any visible caret */}
+      {/* HIDDEN INPUT — completely offscreen */}
       <input
         ref={hiddenInputRef}
         type="text"
@@ -138,19 +137,17 @@ export default function TypingEngine({ terms }: { terms: { term: string; def: st
                   states[i] === 'correct'
                     ? 'text-white'
                     : states[i] === 'incorrect'
-                      ? 'text-red-500'
-                      : 'text-gray-400 opacity-50'
+                    ? 'text-red-500'
+                    : 'text-gray-400 opacity-50'
                 }`}
               >
                 {ch === ' ' ? '\u00A0' : ch}
-                {/* blinking cursor */}
                 {i === cursor && (
                   <span className="absolute -left-1 top-0 h-full w-1.5 bg-cyan-400 animate-pulse" />
                 )}
               </span>
             ))}
 
-            {/* Extra characters */}
             {extra.split('').map((ch, i) => (
               <span key={`extra-${i}`} className="text-red-500 bg-red-500/20 rounded-sm">
                 {ch}
@@ -159,16 +156,18 @@ export default function TypingEngine({ terms }: { terms: { term: string; def: st
           </div>
         </div>
 
-        {/* Bottom message — centered and large */}
+        {/* Bottom message */}
         <div className="mt-24 text-4xl md:text-6xl text-center">
           <span className={isPerfect ? 'text-green-400 font-bold' : 'text-cyan-400 font-semibold'}>
             {isPerfect ? 'Press Enter →' : 'Keep typing'}
           </span>
         </div>
 
-        {/* Progress indicator */}
-        <div className="fixed bottom-10 text-xl text-gray-400">
+        {/* Progress */}
+        <div className="fixed bottom-10 text-xl text-gray-400 text-center w-full">
           {termIndex + 1} / {terms.length}
         </div>
       </div>
     </>
+  );
+}
