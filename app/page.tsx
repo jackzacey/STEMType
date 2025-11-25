@@ -2,14 +2,14 @@
 export default function Home() {
   return (
     <div className="relative min-h-screen">
-      {/* MOVING BLACK HOLE GIF — FULL-SCREEN, LOOPING EVENT HORIZON */}
+      {/* MOVING BLACK HOLE GIF — FULL-SCREEN EVENT HORIZON */}
       <img
-        src="https://svs.gsfc.nasa.gov/vis/a010000/a014300/a014326/Black_Hole_Accretion_Disk_1080p.gif"
+        src="https://svs.gsfc.nasa.gov/vis/a010000/a014100/a014132/BHW_Disk_and_Corona.gif"
         alt="Black Hole Event Horizon"
-        className="fixed inset-0 w-full h-full object-cover"
+        className="fixed inset-0 w-full h-full object-cover z-0"
       />
 
-      {/* CONTENT — FLOATING ON TOP WITH WHITE TEXT */}
+      {/* WHITE TEXT — FLOATING ON TOP */}
       <div className="relative z-10 min-h-screen flex flex-col items-center justify-center text-white px-8 text-center">
         <h1 className="text-8xl md:text-9xl lg:text-[12rem] font-black tracking-tighter drop-shadow-2xl">
           STEMTYPE
