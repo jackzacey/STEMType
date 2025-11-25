@@ -1,8 +1,7 @@
-// app/page.tsx
 export default function Home() {
   return (
     <>
-      {/* BLACK HOLE VIDEO — FULLSCREEN, ALWAYS BEHIND */}
+      {/* THE BLACK HOLE — THIS IS THE ONLY BACKGROUND */}
       <video
         autoPlay
         loop
@@ -10,10 +9,11 @@ export default function Home() {
         playsInline
         className="fixed inset-0 w-full h-full object-cover -z-50 bg-black"
         src="https://videos.pexels.com/video-files/855564/855564-hd_1920_1080_60fps.mp4"
+        poster="https://images.pexels.com/videos/855564/free-video-855564.jpg?auto=compress&cs=tinysrgb&fit=crop&h=630&w=1200"
       />
 
-      {/* CONTENT — RELATIVE + Z-INDEX 10 */}
-      <div className="relative z-10 min-h-screen flex flex-col items-center justify-center text-white px-8">
+      {/* CONTENT — ALWAYS CLICKABLE */}
+      <div className="relative z-10 min-h-screen flex flex-col items-center justify-center text-white text-center px-8">
         <h1 className="text-8xl md:text-9xl lg:text-[12rem] font-black tracking-tighter drop-shadow-2xl">
           STEMTYPE
         </h1>
